@@ -14,11 +14,18 @@ fn main() {
     match matches {
         Ok(matches) => {
             if let Some(input_file) = matches.value_of("file") {
-                run(input_file);
+                match run(input_file) {
+                    Ok(_) => {},
+                    Err(error) => {
+                        error.report();
+                        std::process::exit(1);
+                    }
+                }
             }
         },
         Err(error) => {
             eprintln!("{error}");
+            std::process::exit(1);
         }
     }
 }

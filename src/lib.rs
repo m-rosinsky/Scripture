@@ -1,14 +1,14 @@
 mod lexer;
+mod error;
 
-pub fn run(input_f: &str) {
+pub fn run(input_f: &str) -> Result<(), error::ScrError> {
     let mut main_lexer = lexer::Lexer::new();
     
-    if let Err(err) = main_lexer.tokenize_file(input_f) {
-        eprintln!("Error: {}", err);
-        return;
-    }
+    let _ = main_lexer.tokenize_file(input_f)?;
 
     for token in main_lexer.table {
         println!("{:?}", token);
     }
+
+    Ok(())
 }

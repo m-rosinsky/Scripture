@@ -8,6 +8,7 @@ use std::io::{
     self,
     BufRead,
 };
+use crate::error;
 
 /// This struct defines a Lexer context, which is used to tokenize
 /// raw input files into a table of tokens.
@@ -27,8 +28,16 @@ impl Lexer {
     }
 
     /// This function tokenizes a raw input file.
-    pub fn tokenize_file(&mut self, input_f: &str) -> Result<(), std::io::Error> {
-        let file = File::open(input_f)?;
+    pub fn tokenize_file(&mut self, input_f: &str) -> Result<(), error::ScrError> {
+        let file = File::open(input_f)
+            .map_err(|_e| error::ScrError {
+                err_type: error::ScrErrorType::FileNotFound,
+                fname: String::from(""),
+                line_num: 0,
+                col_num: 0,
+                msg: String::from(input_f),
+            })?;
+
         let reader = io::BufReader::new(file);
 
         for line in reader.lines() {
@@ -38,8 +47,14 @@ impl Lexer {
                     self.tokenize_line(line_content)?;
                     self.line_num += 1;
                 }
-                Err(err) => {
-                    return Err(err);
+                Err(_err) => {
+                    return Err(error::ScrError {
+                        err_type: error::ScrErrorType::FileReadError,
+                        fname: String::from(input_f),
+                        line_num: self.line_num,
+                        col_num: 0,
+                        msg: String::from(""),
+                    });
                 }
             }
         }
@@ -49,7 +64,7 @@ impl Lexer {
 }
 
 impl Lexer {
-    fn tokenize_line(&mut self, line: String) -> Result<(), std::io::Error> {
+    fn tokenize_line(&mut self, line: String) -> Result<(), error::ScrError> {
         self.table.push(
             Token::new(line.as_str(), self.line_num, self.line_idx + 1)
         );
